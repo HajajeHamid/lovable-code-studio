@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { FileCode, Eye, Code, Zap, Database, Server, Globe } from 'lucide-react';
+import { FileCode, Eye, Code, Zap, Database, Server, Globe, Rocket, GitBranch, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { 
@@ -20,6 +20,8 @@ import BlockEditor from './BlockEditor';
 import CodePreview from './CodePreview';
 import ValidationPanel from './ValidationPanel';
 import NewFileDialog from './NewFileDialog';
+import GenerationPanel from './GenerationPanel';
+import ActionToolbar from './ActionToolbar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -46,6 +48,7 @@ const TPEditor: React.FC = () => {
   // UI state
   const [viewMode, setViewMode] = useState<'blocks' | 'preview'>('blocks');
   const [showNewFileDialog, setShowNewFileDialog] = useState(false);
+  const [showGenerationPanel, setShowGenerationPanel] = useState(false);
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
 
   // Get active file
@@ -232,6 +235,46 @@ const TPEditor: React.FC = () => {
     }
   }, [files]);
 
+  // Validate relations between files
+  const handleValidateRelations = useCallback(() => {
+    const issues: string[] = [];
+    
+    const databaseFile = files.find(f => f.type === 'database');
+    const backendFile = files.find(f => f.type === 'backend');
+    const frontendFile = files.find(f => f.type === 'frontend');
+    
+    const dataModels = databaseFile?.blocks.filter(b => b.type === '@DataModel').map(b => b.params.name) || [];
+    
+    if (backendFile && dataModels.length > 0) {
+      const backendContent = JSON.stringify(backendFile.blocks);
+      dataModels.forEach(model => {
+        if (model && !backendContent.includes(model)) {
+          issues.push(`Modèle "${model}" non utilisé dans le backend`);
+        }
+      });
+    }
+    
+    if (frontendFile && dataModels.length > 0) {
+      const frontendContent = JSON.stringify(frontendFile.blocks);
+      dataModels.forEach(model => {
+        if (model && !frontendContent.includes(model)) {
+          issues.push(`Modèle "${model}" non référencé dans le frontend`);
+        }
+      });
+    }
+    
+    if (issues.length === 0) {
+      toast.success('Toutes les relations sont valides !');
+    } else {
+      toast.warning(`${issues.length} problème(s) de relation détecté(s)`);
+    }
+  }, [files]);
+
+  // Open generation panel
+  const handleOpenGeneration = useCallback(() => {
+    setShowGenerationPanel(true);
+  }, []);
+
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
       <EditorHeader
@@ -247,6 +290,15 @@ const TPEditor: React.FC = () => {
         onSelectFile={handleSelectFile}
         onCloseFile={handleCloseFile}
         onNewFile={handleNewFile}
+      />
+
+      {/* Action Toolbar - NEW */}
+      <ActionToolbar
+        onValidate={handleValidateFile}
+        onValidateRelations={handleValidateRelations}
+        onGenerate={handleOpenGeneration}
+        onExport={handleExportAll}
+        hasBlocks={totalBlocks > 0}
       />
 
       <div className="flex-1 flex overflow-hidden">
@@ -295,20 +347,20 @@ const TPEditor: React.FC = () => {
                 variant="outline"
                 size="sm"
                 onClick={handleValidateFile}
-                className="text-xs"
+                className="text-xs gap-1.5"
               >
-                <Zap className="w-3.5 h-3.5 mr-1.5" />
+                <CheckCircle className="w-3.5 h-3.5" />
                 Valider
               </Button>
 
               <Button
-                variant="default"
+                variant="glow"
                 size="sm"
-                onClick={() => handleExportFile(activeFile)}
-                disabled={activeFile.blocks.length === 0}
-                className="text-xs"
+                onClick={handleOpenGeneration}
+                className="text-xs gap-1.5"
               >
-                Exporter
+                <Rocket className="w-3.5 h-3.5" />
+                Générer
               </Button>
             </div>
           </div>
@@ -385,6 +437,14 @@ const TPEditor: React.FC = () => {
         onOpenChange={setShowNewFileDialog}
         onCreateFile={handleCreateFile}
       />
+
+      {/* Generation Panel - NEW */}
+      {showGenerationPanel && (
+        <GenerationPanel
+          files={files}
+          onClose={() => setShowGenerationPanel(false)}
+        />
+      )}
     </div>
   );
 };

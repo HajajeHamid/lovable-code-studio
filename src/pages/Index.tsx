@@ -1,13 +1,18 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Helmet } from 'react-helmet';
+import TPEditor from '@/components/editor/TPEditor';
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <>
+      <Helmet>
+        <title>TP Editor - Éditeur de langage TechPlatform</title>
+        <meta 
+          name="description" 
+          content="Éditeur visuel pour le langage TP (TechPlatform). Créez des fichiers database.tp, generate_backend.tp et generate_frontend.tp pour générer automatiquement des projets full-stack." 
+        />
+      </Helmet>
+      <TPEditor />
+    </>
   );
 };
 

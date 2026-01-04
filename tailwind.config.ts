@@ -13,6 +13,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -47,6 +51,39 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
+        info: {
+          DEFAULT: "hsl(var(--info))",
+          foreground: "hsl(var(--info-foreground))",
+        },
+        syntax: {
+          keyword: "hsl(var(--syntax-keyword))",
+          string: "hsl(var(--syntax-string))",
+          number: "hsl(var(--syntax-number))",
+          comment: "hsl(var(--syntax-comment))",
+          function: "hsl(var(--syntax-function))",
+          variable: "hsl(var(--syntax-variable))",
+          decorator: "hsl(var(--syntax-decorator))",
+          bracket: "hsl(var(--syntax-bracket))",
+        },
+        block: {
+          data: "hsl(var(--block-data))",
+          backend: "hsl(var(--block-backend))",
+          frontend: "hsl(var(--block-frontend))",
+          directive: "hsl(var(--block-directive))",
+          architecture: "hsl(var(--block-architecture))",
+          integration: "hsl(var(--block-integration))",
+          business: "hsl(var(--block-business))",
+          testing: "hsl(var(--block-testing))",
+          infra: "hsl(var(--block-infra))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -65,25 +102,38 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+        shimmer: {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
+        pulse: {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.5" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        shimmer: "shimmer 2s linear infinite",
+        pulse: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+      },
+      backgroundImage: {
+        "gradient-primary": "var(--gradient-primary)",
+        "gradient-secondary": "var(--gradient-secondary)",
+        "gradient-success": "var(--gradient-success)",
+        "gradient-glow": "var(--gradient-glow)",
+      },
+      boxShadow: {
+        glow: "var(--shadow-glow)",
+        card: "var(--shadow-card)",
+        block: "var(--shadow-block)",
       },
     },
   },

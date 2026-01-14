@@ -187,7 +187,7 @@ export function BlockTypeEditor({ onSave, initialData }: BlockTypeEditorProps) {
   const [activeTab, setActiveTab] = useState<'config' | 'fields' | 'validation' | 'code'>('config');
   const [isOpen, setIsOpen] = useState(false);
   
-  const [blockType, setBlockType] = useState<Partial<BlockTypeInterface>>({
+  const [blockType, setBlockType] = useState<Partial<Omit<BlockTypeInterface, 'id'>> & { id?: string }>({
     id: '',
     name: '',
     label: '',

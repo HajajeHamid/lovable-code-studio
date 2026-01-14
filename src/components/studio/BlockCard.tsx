@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronRight, Trash2, GripVertical, Lock, Unlock, Plus, Edit2, Save, X } from 'lucide-react';
 import Editor from '@monaco-editor/react';
-import { BlockInstance, BlockFieldDefinition, getBlockType } from '../../lib/blocks/block-definitions';
+import { BlockInstance, BlockFieldDefinition, FieldConfig, getBlockType } from '../../lib/blocks/block-definitions';
 import { useStudioStore } from '../../stores/studioStore';
 import { cn } from '../../lib/utils';
 import { Input } from '@/components/ui/input';
@@ -258,7 +258,7 @@ export function BlockCard({ block, depth = 0, index, parentId }: BlockCardProps)
 // Helper component for field rendering
 interface FieldRendererProps {
   block: BlockInstance;
-  field: BlockFieldDefinition;
+  field: FieldConfig;
   value: any;
   onChange: (value: any) => void;
   setEditing: (fieldId: string | null) => void;
@@ -573,7 +573,7 @@ function FieldRenderer({ block, field, value, onChange, setEditing }: FieldRende
 
 // Recursive sub-component for nested fields
 interface BlockFieldsProps {
-  fields: BlockFieldDefinition[];
+  fields: FieldConfig[];
   values: Record<string, any>;
   onChange: (newValues: Record<string, any>) => void;
 }

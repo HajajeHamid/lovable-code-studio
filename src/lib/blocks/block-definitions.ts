@@ -119,7 +119,7 @@ export interface DataJsonNode extends ASTNode {
 export interface FieldConfig {
   id: string;
   name?: string;
-  type: 'text' | 'select' | 'multiselect' | 'boolean' | 'number' | 'code' | 'json' | 'enum-values' | 'array' | 'object';
+  type: 'text' | 'select' | 'multiselect' | 'boolean' | 'number' | 'code' | 'json' | 'enum-values' | 'array' | 'object' | 'dataJson' | 'relation';
   label?: string;
   required?: boolean;
   unique?: boolean;
@@ -149,15 +149,14 @@ export interface FieldConfig {
   dynamicSource?: string;
   options?: { label: string; value: string }[];
   monacoOptions?: { language: string; theme?: string };
-  nestedType?: Record<string, any> | {
-    type?: string;
-    label?: string;
-    nestedType?: Record<string, any>;
-    fields?: FieldConfig[];
-  };
+  nestedType?: Record<string, any>;
+  fields?: FieldConfig[];
   maxItems?: number;
   minItems?: number;
 }
+
+// BlockFieldDefinition is the same as FieldConfig for compatibility
+export type BlockFieldDefinition = FieldConfig;
 
 type BlockTypeId = BlockType;
 
@@ -5708,28 +5707,7 @@ export interface BlockMetadata {
   notes?: string;
 }
 
-export interface BlockFieldDefinition {
-  id: string;
-  name: string;
-  type: 'text' | 'number' | 'boolean' | 'select' | 'multiselect' | 'enum-values' | 'code' | 'json' | 'relation' | 'array' | 'object'; // Ajouts: 'relation' pour liaisons, 'array'/'object' pour nested
-  label: string;
-  placeholder?: string;
-  required?: boolean;
-  defaultValue?: any;
-  options?: { label: string; value: string }[]; // Statiques
-  dynamicSource?: 'models' | 'entities' | 'apis' | 'enums' | 'components' | 'pages' | 'none'; // Sources dynamiques (filtre/search runtime via store)
-  searchEnabled?: boolean; // Active recherche/autocomplete pour select/multiselect/dynamic
-  relationType?: 'oneToOne' | 'oneToMany' | 'manyToOne' | 'manyToMany'; // Pour 'relation', auto-valide liaisons
-  previewRenderer?: (value: any) => string; // Fonction pour preview mini (ex. JSON.stringify truncé)
-  validation?: FieldValidation;
-  helpText?: string;
-  customValidator?: (value: any, context: any) => string | null; // Avec contexte (ex. store.blocks pour check existence)
-  allowCustomAdd?: boolean; // Permet ajout custom dans listes/select (simplifie pour non-tech)
-  maxItems?: number; // Pour array/enum/multiselect (drag & drop limité)
-  minItems?: number;
-  nestedType?: BlockFieldDefinition; // Type interne pour array/object (récursif, éditable nested)
-  monacoOptions?: { language: string; theme: string }; // Pour 'code'/'json', config Monaco (highlight, auto-complete)
-}
+// NOTE: BlockFieldDefinition is now defined at the top of this file as FieldConfig alias
 
 export interface FieldValidation {
   minLength?: number;

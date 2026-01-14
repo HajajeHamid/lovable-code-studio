@@ -65,17 +65,19 @@ export function BlockCanvas() {
     setTPCode(code);
   }, [blocks, setTPCode]);
 
-  // Drop target for new blocks from palette
+  // Drop target for new blocks from palette - only place where blocks are added
   const [{ isOver }, drop] = useDrop({
     accept: ITEM_TYPE,
-    drop: (item: { typeId: string }) => {
+    drop: (item: { typeId: string }, monitor) => {
+      // Only add if it's a direct drop (not nested)
+      if (monitor.didDrop()) return;
       addBlock(item.typeId);
       toast.success('Bloc ajouté', {
         description: `Le bloc a été ajouté au canvas.`,
       });
     },
     collect: (monitor) => ({
-      isOver: monitor.isOver(),
+      isOver: monitor.isOver({ shallow: true }),
     }),
   });
 

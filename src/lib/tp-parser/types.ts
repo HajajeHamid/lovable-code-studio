@@ -1127,6 +1127,7 @@ export interface ParseStatistics {
   models: number;
   components: number;
   pages: number;
+  apis: number;
   microservices: number;
   imports: number;
   autoGens: number;

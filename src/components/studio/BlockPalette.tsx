@@ -241,7 +241,7 @@ export function BlockPalette() {
           </TabsList>
         </Tabs>
 
-        <ScrollArea className="h-[calc(100vh-140px)]">
+        <ScrollArea className="h-[calc(100vh-200px)]">
           <AnimatePresence>
             {sortedCategories.map((catId) => {
               const category = BLOCK_CATEGORIES[catId];
@@ -284,15 +284,7 @@ export function BlockPalette() {
                           collect: (monitor) => ({
                             isDragging: monitor.isDragging(),
                           }),
-                          end: (item, monitor) => {
-                            if (monitor.didDrop()) {
-                              addBlock(block.id);
-                              trackUsage(block.id);
-                              toast.success('Bloc ajouté', {
-                                description: 'Le bloc a été ajouté au canvas.',
-                              });
-                            }
-                          },
+                          // Remove the end callback that adds block on drop - the drop target handles this
                         });
 
                         const isFavorite = favorites.includes(block.id);

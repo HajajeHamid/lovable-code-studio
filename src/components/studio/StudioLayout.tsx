@@ -1,10 +1,11 @@
 // StudioLayout.tsx
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Blocks, Code2, Eye, Download, Upload,
   Zap, PanelLeftClose, PanelLeft, FileCode,
-  AlertCircle, CheckCircle, Activity
+  AlertCircle, CheckCircle, Activity, Play, ShieldCheck,
+  GitBranch, FolderTree
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -27,15 +28,19 @@ const useProcessedStore = () => {
   const store = useStudioStore();
 
   return {
-    activeTab:store.activeTab,
-    setActiveTab:store.setActiveTab,
-    sidebarOpen:store.sidebarOpen,
-    toggleSidebar:store.toggleSidebar,
-    tpCode:store.tpCode,
-    setTPCode:store.setTPCode,
-    parseResult:store.parseResult,
-    setParseResult:store.setParseResult,
-    blocks: store.blocks || []
+    activeTab: store.activeTab,
+    setActiveTab: store.setActiveTab,
+    sidebarOpen: store.sidebarOpen,
+    toggleSidebar: store.toggleSidebar,
+    tpCode: store.tpCode,
+    setTPCode: store.setTPCode,
+    parseResult: store.parseResult,
+    setParseResult: store.setParseResult,
+    blocks: store.blocks || [],
+    undo: store.undo,
+    redo: store.redo,
+    canUndo: store.canUndo,
+    canRedo: store.canRedo,
   };
 };
 export function StudioLayout() {
@@ -48,8 +53,15 @@ export function StudioLayout() {
     setTPCode,
     blocks,
     parseResult,
-    setParseResult
+    setParseResult,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
   } = useProcessedStore();
+  
+  const [isValidating, setIsValidating] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Sync blocks to TP code
   /*
@@ -132,6 +144,48 @@ export function StudioLayout() {
     }
   };
 
+  const handleValidate = () => {
+    setIsValidating(true);
+    try {
+      if (parseResult && parseResult.errors.length > 0) {
+        toast.error(`${parseResult.errors.length} erreur(s) détectée(s)`, {
+          description: parseResult.errors[0]?.message || 'Vérifiez l\'onglet Analyse.',
+        });
+        setActiveTab('analysis');
+      } else if (parseResult && parseResult.warnings.length > 0) {
+        toast.warning(`${parseResult.warnings.length} avertissement(s)`, {
+          description: 'Le projet est valide avec des avertissements.',
+        });
+      } else {
+        toast.success('Validation réussie !', {
+          description: 'Aucune erreur détectée. Prêt à générer.',
+        });
+      }
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
+  const handleGenerate = () => {
+    setIsGenerating(true);
+    try {
+      if (errorCount > 0) {
+        toast.error('Impossible de générer', {
+          description: 'Corrigez les erreurs avant de générer le projet.',
+        });
+        setActiveTab('analysis');
+        return;
+      }
+      
+      toast.success('Génération en cours...', {
+        description: 'La structure du projet sera bientôt disponible.',
+      });
+      setActiveTab('preview');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const errorCount = parseResult?.errors?.length ?? 0;
   const warningCount = parseResult?.warnings?.length ?? 0;
   const stats = parseResult?.statistics;
@@ -190,6 +244,38 @@ export function StudioLayout() {
           </Tabs>
 
           <div className="flex-1" />
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleValidate}
+                disabled={isValidating || !tpCode?.trim()}
+                className="gap-2"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                Valider
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Valider le projet</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                variant="default" 
+                size="sm"
+                onClick={handleGenerate}
+                disabled={isGenerating || errorCount > 0 || blocks.length === 0}
+                className="gap-2"
+              >
+                <Play className="w-4 h-4" />
+                Générer
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Générer le projet</TooltipContent>
+          </Tooltip>
 
           <TPFileImportButton />
 

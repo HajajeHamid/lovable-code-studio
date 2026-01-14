@@ -1,11 +1,12 @@
 // StudioLayout.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Blocks, Code2, Eye, Download, Upload,
   Zap, PanelLeftClose, PanelLeft, FileCode,
   AlertCircle, CheckCircle, Activity, Play, ShieldCheck,
-  GitBranch, FolderTree
+  GitBranch, FolderTree, Undo2, Redo2, Bot, Plus,
+  MessageSquare, Settings, History
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useStudioStore } from '@/stores/studioStore';
 import { BlockPalette } from './BlockPalette';
 import { BlockCanvas } from './BlockCanvas';
+import { ProjectStructureTab } from './ProjectStructureTab';
+import { RelationsTreeTab } from './RelationsTreeTab';
+import { BlockTypeEditor } from './BlockTypeEditor';
+import { AIChatPanel } from './AIChatPanel';
 import { TPFileImportButton } from './TPFileImportButton';
 import { cn } from '@/lib/utils';
 import { parseTP } from '@/lib/tp-parser';
@@ -24,6 +29,7 @@ import Editor from '@monaco-editor/react';
 import { toast } from '@/components/ui/sonner';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { useHotkeys } from 'react-hotkeys-hook';
 const useProcessedStore = () => {
   const store = useStudioStore();
 
@@ -39,8 +45,10 @@ const useProcessedStore = () => {
     blocks: store.blocks || [],
     undo: store.undo,
     redo: store.redo,
-    canUndo: store.canUndo,
-    canRedo: store.canRedo,
+    canUndo: store.historyIndex > 0,
+    canRedo: store.historyIndex < store.history.length - 1,
+    historyIndex: store.historyIndex,
+    historyLength: store.history.length,
   };
 };
 export function StudioLayout() {
@@ -58,10 +66,28 @@ export function StudioLayout() {
     redo,
     canUndo,
     canRedo,
+    historyIndex,
+    historyLength,
   } = useProcessedStore();
   
   const [isValidating, setIsValidating] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showAIPanel, setShowAIPanel] = useState(false);
+
+  // Keyboard shortcuts for undo/redo
+  useHotkeys('ctrl+z, cmd+z', () => {
+    if (canUndo) {
+      undo();
+      toast.info('Action annulée');
+    }
+  }, [canUndo, undo]);
+
+  useHotkeys('ctrl+shift+z, cmd+shift+z, ctrl+y, cmd+y', () => {
+    if (canRedo) {
+      redo();
+      toast.info('Action rétablie');
+    }
+  }, [canRedo, redo]);
 
   // Sync blocks to TP code
   /*
@@ -220,15 +246,14 @@ export function StudioLayout() {
               <TabsTrigger value="code">
                 <Code2 className="w-4 h-4 mr-2" />
                 Code TP
-                {tpCode && (
-                  <Badge variant="secondary" className="ml-2 text-xs">
-                    {tpCode.split('\n').length}L
-                  </Badge>
-                )}
               </TabsTrigger>
-              <TabsTrigger value="preview">
-                <Eye className="w-4 h-4 mr-2" />
-                Preview
+              <TabsTrigger value="structure">
+                <FolderTree className="w-4 h-4 mr-2" />
+                Structure
+              </TabsTrigger>
+              <TabsTrigger value="relations">
+                <GitBranch className="w-4 h-4 mr-2" />
+                Relations
               </TabsTrigger>
               <TabsTrigger value="analysis">
                 <Activity className="w-4 h-4 mr-2" />
@@ -236,12 +261,63 @@ export function StudioLayout() {
                 {errorCount > 0 && (
                   <Badge variant="destructive" className="ml-2 text-xs">{errorCount}</Badge>
                 )}
-                {warningCount > 0 && errorCount === 0 && (
-                  <Badge variant="warning" className="ml-2 text-xs">{warningCount}</Badge>
-                )}
               </TabsTrigger>
             </TabsList>
           </Tabs>
+
+          <div className="flex-1" />
+
+          {/* Undo/Redo Buttons */}
+          <div className="flex items-center gap-1 mr-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => {
+                    if (canUndo) {
+                      undo();
+                      toast.info('Action annulée');
+                    }
+                  }}
+                  disabled={!canUndo}
+                  className="h-8 w-8"
+                >
+                  <Undo2 className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Annuler (Ctrl+Z)</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => {
+                    if (canRedo) {
+                      redo();
+                      toast.info('Action rétablie');
+                    }
+                  }}
+                  disabled={!canRedo}
+                  className="h-8 w-8"
+                >
+                  <Redo2 className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Rétablir (Ctrl+Shift+Z)</TooltipContent>
+            </Tooltip>
+            {historyLength > 0 && (
+              <Badge variant="outline" className="ml-1 text-xs">
+                {historyIndex + 1}/{historyLength}
+              </Badge>
+            )}
+          </div>
+
+          {/* Block Type Editor */}
+          <BlockTypeEditor onSave={(blockType) => {
+            toast.success(`Type de bloc "${blockType.label}" créé`);
+          }} />
 
           <div className="flex-1" />
 
@@ -293,6 +369,21 @@ export function StudioLayout() {
             <TooltipContent>
               {tpCode?.trim() ? 'Exporter .tp' : 'Rien à exporter'}
             </TooltipContent>
+          </Tooltip>
+
+          {/* AI Chat Toggle */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                variant={showAIPanel ? "default" : "outline"} 
+                size="icon"
+                onClick={() => setShowAIPanel(!showAIPanel)}
+                className={cn(showAIPanel && "bg-primary")}
+              >
+                <Bot className="w-5 h-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Assistant AI (Ollama)</TooltipContent>
           </Tooltip>
         </header>
 
@@ -358,40 +449,14 @@ export function StudioLayout() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="preview" className="h-full m-0 overflow-auto">
-                <div className="p-6 space-y-4">
-                  <Alert>
-                    <Eye className="h-4 w-4" />
-                    <AlertTitle>Preview Projet</AlertTitle>
-                    <AlertDescription>
-                      Ici serait rendu un preview live du projet généré (ex: iframe pour UI, ou simulation API).
-                      Pour l'instant, placeholder pour generated files/output.
-                    </AlertDescription>
-                  </Alert>
+              {/* Structure Tab */}
+              <TabsContent value="structure" className="h-full m-0">
+                <ProjectStructureTab />
+              </TabsContent>
 
-                  {/* Preview Placeholder with better UX */}
-                  <div className="border rounded-lg p-8 bg-muted/20 text-center space-y-4">
-                    <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-                      <Eye className="w-8 h-8 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg mb-2">Preview en développement</h3>
-                      <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                        Cette section affichera bientôt une prévisualisation interactive de votre projet généré.
-                      </p>
-                    </div>
-                    <div className="flex gap-2 justify-center pt-4">
-                      <Button variant="outline" size="sm" disabled>
-                        <FileCode className="w-4 h-4 mr-2" />
-                        Voir les fichiers générés
-                      </Button>
-                      <Button variant="outline" size="sm" disabled>
-                        <Zap className="w-4 h-4 mr-2" />
-                        Générer le projet
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+              {/* Relations Tab */}
+              <TabsContent value="relations" className="h-full m-0">
+                <RelationsTreeTab />
               </TabsContent>
 
               <TabsContent value="analysis" className="h-full m-0 overflow-auto">
@@ -559,6 +624,11 @@ export function StudioLayout() {
             </Tabs>
           </div>
         </div>
+
+        {/* AI Chat Panel */}
+        <AnimatePresence>
+          {showAIPanel && <AIChatPanel />}
+        </AnimatePresence>
       </div>
     </DndProvider>
   );

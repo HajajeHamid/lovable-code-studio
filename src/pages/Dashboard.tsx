@@ -13,7 +13,7 @@ export default function Dashboard() {
   const [audit, setAudit] = useState([]);
 
   const handleSubmit = async () => {
-    const res = await executeGoal(goal, 'user1');
+    const res = await executeGoal(goal, 'user1', './project');
     setDiffs(res.diffs);
     setScore(res.score);
     setAudit(res.audit);

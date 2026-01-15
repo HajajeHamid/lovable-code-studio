@@ -1,11 +1,13 @@
 import React from 'react';
-import Dashboard from './pages/Dashboard';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import ChatDevLayout from './components/chatdev/ChatDevLayout';
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-blue-600 text-white p-4 text-xl font-bold">Lovable Clone</header>
-      <Dashboard />
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/*" element={<ChatDevLayout />} />
+      </Routes>
+    </BrowserRouter>
   );
 }

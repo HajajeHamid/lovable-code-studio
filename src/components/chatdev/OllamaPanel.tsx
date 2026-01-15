@@ -230,7 +230,7 @@ export default function OllamaPanel() {
                     setModelToInstall('');
                   }
                 }}
-                disabled={!modelToInstall || pullProgress[modelToInstall]}
+                disabled={!modelToInstall || Boolean(pullProgress[modelToInstall])}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 disabled:opacity-50"
               >
                 Installer
